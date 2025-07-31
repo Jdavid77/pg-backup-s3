@@ -1,4 +1,4 @@
-FROM alpine:3.20.3
+FROM alpine:3.22.1
 LABEL maintainer="Jdavid77 <johnynobrega17@gmail.com>"
 
 ARG UID=1001
@@ -9,9 +9,10 @@ RUN apk --no-cache add \
         curl \
         ca-certificates \
         openssl \
-        postgresql-client-17 \
+        postgresql17-client \
         bash \
-        aws-cli
+        aws-cli \
+        coreutils
 
 RUN addgroup -g $GID -S ${USER} && \
     adduser -u $UID -S ${USER} -G ${USER}
