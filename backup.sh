@@ -115,7 +115,7 @@ else
   done
 fi
 if [ -n "$REMOVE_BEFORE" ]; then
-  date_from_remove=$(date -r $(( $(date +%s) - $REMOVE_BEFORE * 86400 )) +%Y-%m-%d)
+  date_from_remove=$(date -d "${REMOVE_BEFORE} days ago" +%Y-%m-%d)
   backups_query="Contents[?LastModified<='${date_from_remove} 00:00:00'].{Key: Key}"
 
   echo "Removing old backups from $S3_BUCKET..."
