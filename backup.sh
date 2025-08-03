@@ -65,7 +65,7 @@ pg_dumpall -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER | gzip > $SRC_F
 
 if [ "${ENCRYPTION_PASSWORD}" != "**None**" ]; then
   log "Encrypting ${SRC_FILE}"
-  openssl enc -aes-256-cbc -in $SRC_FILE -out ${SRC_FILE}.enc -k $ENCRYPTION_PASSWORD
+  openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -in $SRC_FILE -out ${SRC_FILE}.enc -pass pass:$ENCRYPTION_PASSWORD
   if [ $? != 0 ]; then
     >&2 log "Error encrypting ${SRC_FILE}"
   fi

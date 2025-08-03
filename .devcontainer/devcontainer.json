@@ -1,0 +1,7 @@
+{
+  "name": "pg-backup",
+  "image": "mcr.microsoft.com/vscode/devcontainers/base:ubuntu-22.04",
+  "features": {
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0.5": {}
+  }
+}
