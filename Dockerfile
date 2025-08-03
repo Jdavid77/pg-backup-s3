@@ -4,12 +4,13 @@ LABEL maintainer="Jdavid77 <johnynobrega17@gmail.com>"
 ARG UID=1001
 ARG GID=1001
 ARG USER=nonroot
+ARG POSTGRES_VERSION=17
 
 RUN apk --no-cache add \
         curl \
         ca-certificates \
         openssl \
-        postgresql17-client \
+        postgresql${POSTGRES_VERSION}-client \
         bash \
         aws-cli \
         coreutils
