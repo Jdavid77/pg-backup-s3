@@ -20,6 +20,7 @@ A lightweight Docker image for automated PostgreSQL database backups to S3-compa
 
 ```bash
 docker run --rm \
+  -e SERVER_NAME=my-server \
   -e POSTGRES_HOST=localhost \
   -e POSTGRES_USER=username \
   -e POSTGRES_PASSWORD=password \
@@ -51,6 +52,9 @@ services:
       # Schedule backups (optional - runs once if not set)
       SCHEDULE: '@daily'
       
+      # Server identification
+      SERVER_NAME: production-db
+      
       # PostgreSQL connection
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
@@ -77,6 +81,7 @@ services:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
+| `SERVER_NAME` | Server identifier for backup filename | `prod-db` |
 | `POSTGRES_HOST` | PostgreSQL server hostname | `localhost` |
 | `POSTGRES_USER` | PostgreSQL username | `postgres` |
 | `POSTGRES_PASSWORD` | PostgreSQL password | `mypassword` |
@@ -102,8 +107,12 @@ services:
 ## Backup File Format
 
 Backups are saved with the following naming pattern:
-- **Unencrypted**: `all_2024-01-15T10:30:00Z.sql.gz`
-- **Encrypted**: `all_2024-01-15T10:30:00Z.sql.gz.enc`
+- **Unencrypted**: `{SERVER_NAME}_all_2024-01-15T10:30:00Z.sql.gz`
+- **Encrypted**: `{SERVER_NAME}_all_2024-01-15T10:30:00Z.sql.gz.enc`
+
+Examples:
+- `prod-db_all_2024-01-15T10:30:00Z.sql.gz`
+- `staging_all_2024-01-15T10:30:00Z.sql.gz.enc`
 
 ## Encryption & Decryption
 
@@ -116,10 +125,10 @@ ENCRYPTION_PASSWORD=your-secure-password
 ### Decrypt Backups
 ```bash
 # Download encrypted backup
-aws s3 cp s3://your-bucket/backup/all_2024-01-15T10:30:00Z.sql.gz.enc ./
+aws s3 cp s3://your-bucket/backup/prod-db_all_2024-01-15T10:30:00Z.sql.gz.enc ./
 
 # Decrypt the backup (uses PBKDF2 with 100,000 iterations)
-openssl aes-256-cbc -d -pbkdf2 -iter 100000 -in all_2024-01-15T10:30:00Z.sql.gz.enc -out backup.sql.gz -pass pass:your-secure-password
+openssl aes-256-cbc -d -pbkdf2 -iter 100000 -in prod-db_all_2024-01-15T10:30:00Z.sql.gz.enc -out backup.sql.gz -pass pass:your-secure-password
 
 # Extract and restore
 gunzip backup.sql.gz

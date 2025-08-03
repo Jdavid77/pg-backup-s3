@@ -18,6 +18,7 @@ require_env POSTGRES_HOST
 require_env POSTGRES_PORT
 require_env POSTGRES_USER
 require_env POSTGRES_PASSWORD
+require_env SERVER_NAME
 require_env S3_BUCKET
 require_env S3_ACCESS_KEY_ID
 require_env S3_SECRET_ACCESS_KEY
@@ -40,7 +41,7 @@ fi
 # Backup File
 
 export SRC_FILE=/tmp/dump.sql.gz
-export DEST_FILE=all_$(date +"%Y-%m-%dT%H:%M:%SZ").sql.gz
+export DEST_FILE=${SERVER_NAME}_all_$(date +"%Y-%m-%dT%H:%M:%SZ").sql.gz
 
 # Postgres
 

@@ -18,7 +18,7 @@ RUN apk --no-cache add \
 RUN addgroup -g $GID -S ${USER} && \
     adduser -u $UID -S ${USER} -G ${USER}
 
-
+ENV SERVER_NAME **None**
 ENV POSTGRES_HOST **None**
 ENV POSTGRES_PORT 5432
 ENV POSTGRES_USER **None**
