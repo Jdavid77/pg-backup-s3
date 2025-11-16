@@ -24,12 +24,12 @@ jobs:
       # This is used to complete the identity challenge
       # with sigstore/fulcio when running outside of PRs.
       id-token: write
-    
+
     strategy:
       matrix:
-        postgres_version: [16, 17, 18]
+        postgres_version: [16, 17]
         include:
-          - postgres_version: 18
+          - postgres_version: 17
             is_latest: true
 
     steps:
