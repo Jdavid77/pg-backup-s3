@@ -6,6 +6,9 @@ ARG GID=1001
 ARG USER=nonroot
 ARG POSTGRES_VERSION=17
 
+RUN echo "https://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories && \
+    echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
+
 RUN apk --no-cache add \
         curl \
         ca-certificates \
