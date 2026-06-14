@@ -1,4 +1,4 @@
-FROM alpine:3.22.1
+FROM alpine:3.24.0
 LABEL maintainer="Jdavid77 <johnynobrega17@gmail.com>"
 
 ARG UID=1001
