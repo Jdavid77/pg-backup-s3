@@ -3,7 +3,7 @@ name: Docker
 # This workflow uses actions that are not certified by GitHub.
 # They are provided by a third-party and are governed by
 # separate terms of service, privacy policy, and support
-# documentation.
+# documentation.le
 
 on:
   workflow_dispatch:
@@ -58,8 +58,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=pg${{ matrix.postgres_version }}
-            type=raw,value=main,enable=${{ matrix.is_latest == true && github.ref == 'refs/heads/main' }}
+            type=raw,value=pg${{ matrix.postgres_version }}-{{date 'YYYYMMDD'}}
+            type=raw,value=latest,enable=${{ matrix.is_latest == true && github.ref == 'refs/heads/main' }}
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
