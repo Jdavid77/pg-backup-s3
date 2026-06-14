@@ -33,9 +33,9 @@ export AWS_SECRET_ACCESS_KEY=$S3_SECRET_ACCESS_KEY
 export AWS_DEFAULT_REGION=$S3_REGION
 
 if [ -z ${S3_PREFIX+x} ]; then
-  S3_PREFIX="/"
+  S3_PREFIX=""
 else
-  S3_PREFIX="/${S3_PREFIX}/"
+  S3_PREFIX="${S3_PREFIX}/"
 fi
 
 # Backup File
@@ -64,7 +64,7 @@ POSTGRES_HOST_OPTS="-h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER $POSTG
 log "Creating dump of all databases from ${POSTGRES_HOST}..."
 pg_dumpall -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER | gzip > $SRC_FILE
 
-if [ "${ENCRYPTION_PASSWORD}" != "**None**" ]; then
+if [ -n "${ENCRYPTION_PASSWORD:-}" ]; then
   log "Encrypting ${SRC_FILE}"
   openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -in $SRC_FILE -out ${SRC_FILE}.enc -pass pass:$ENCRYPTION_PASSWORD
   if [ $? != 0 ]; then
@@ -76,39 +76,33 @@ if [ "${ENCRYPTION_PASSWORD}" != "**None**" ]; then
 fi
 
 log "Uploading dump to $S3_BUCKET"
-cat $SRC_FILE | aws $AWS_ARGS s3 cp - "s3://${S3_BUCKET}${S3_PREFIX}${DEST_FILE}" || exit 2
+cat $SRC_FILE | aws $AWS_ARGS s3 cp - "s3://${S3_BUCKET}/${S3_PREFIX}${DEST_FILE}" || exit 2
 
 log "SQL backup uploaded successfully"
 rm -rf $SRC_FILE
 
 if [ -n "$REMOVE_BEFORE" ]; then
   # Calculate the cutoff date (using coreutils date command)
-  date_from_remove=$(date -d "${REMOVE_BEFORE} days ago" +%Y-%m-%d)
+  if date --version >/dev/null 2>&1; then
+    date_from_remove=$(date -d "${REMOVE_BEFORE} days ago" +%Y-%m-%d)
+  else
+    date_from_remove=$(date -v-${REMOVE_BEFORE}d +%Y-%m-%d)
+  fi
   backups_query="Contents[?LastModified<='${date_from_remove} 00:00:00'].{Key: Key}"
 
   log "Removing old backups from $S3_BUCKET (older than ${date_from_remove})..."
   
   # First, check if there are any objects to remove
-  if [ -z "$S3_PREFIX" ]; then
-        # No prefix - list all objects in bucket
-        old_backups=$(aws s3api list-objects \
-          --bucket "${S3_BUCKET}" \
-          --query "${backups_query}" \
-          --output text \
-          $AWS_ARGS 2>/dev/null || echo "")
-  else
-        # Use prefix to limit scope
-        old_backups=$(aws s3api list-objects \
-          --bucket "${S3_BUCKET}" \
-          --prefix "${S3_PREFIX}" \
-          --query "${backups_query}" \
-          --output text \
-          $AWS_ARGS 2>/dev/null || echo "")
-  fi
+  old_backups=$(aws s3api list-objects \
+    --bucket "${S3_BUCKET}" \
+    --prefix "${S3_PREFIX}${SERVER_NAME}_" \
+    --query "${backups_query}" \
+    --output text \
+    $AWS_ARGS 2>/dev/null || echo "")
   
   if [ -n "$old_backups" ] && [ "$old_backups" != "None" ]; then
     log "Found old backups to remove..."
-    log "$old_backups" | xargs -n1 -t -I 'KEY' aws s3 rm s3://${S3_BUCKET}/KEY $AWS_ARGS
+    echo "$old_backups" | xargs -n1 -I 'KEY' aws s3 rm s3://${S3_BUCKET}/KEY $AWS_ARGS
     log "Removal complete."
   else
     log "No old backups found to remove."
