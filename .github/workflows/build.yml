@@ -29,6 +29,9 @@ jobs:
           - postgres_version: 19
             is_latest: true
 
+    env:
+      POSTGRES_VERSION: ${{ matrix.postgres_version }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
