@@ -26,9 +26,9 @@ jobs:
 
     strategy:
       matrix:
-        postgres_version: [16, 17, 18]
+        postgres_version: [16, 17, 18, 19]
         include:
-          - postgres_version: 18
+          - postgres_version: 19
             is_latest: true
 
     steps:
