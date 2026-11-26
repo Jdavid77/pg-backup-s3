@@ -1,18 +1,16 @@
-name: Docker
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.le
+name: Build
 
 on:
-  workflow_dispatch:
   pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 env:
-  # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
-  # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
@@ -21,14 +19,12 @@ jobs:
     permissions:
       contents: read
       packages: write
-      # This is used to complete the identity challenge
-      # with sigstore/fulcio when running outside of PRs.
       id-token: write
 
     strategy:
       fail-fast: false
       matrix:
-        postgres_version: [16, 17, 18, 19]
+        postgres_version: [17, 18, 19]
         include:
           - postgres_version: 19
             is_latest: true
