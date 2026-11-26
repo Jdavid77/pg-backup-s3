@@ -1,0 +1,84 @@
+# Back up a seeded Postgres to a local S3 and check the uploaded dump.
+#
+#   POSTGRES_VERSION=19 docker compose -f test/compose.yaml run --rm --build verify
+#   docker compose -f test/compose.yaml down -v
+#
+# Set ENCRYPTION_PASSWORD to test encrypted backups. Unset, it falls back to
+# **None**, the image's own default.
+name: pg-backup-s3-test
+
+services:
+  postgres:
+    image: postgres:${POSTGRES_VERSION:-19}-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+    healthcheck:
+      test:
+        - CMD
+        - pg_isready
+        - -U
+        - postgres
+      interval: 2s
+      retries: 30
+
+  s3:
+    image: chrislusf/seaweedfs:4.55
+    command:
+      - server
+      - -s3
+      - -s3.port=9000
+
+  backup:
+    build:
+      context: ..
+      args:
+        POSTGRES_VERSION: ${POSTGRES_VERSION:-19}
+    image: pg-backup-s3:test
+    environment:
+      S3_ENDPOINT: http://s3:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: pgbackup
+      S3_PREFIX: backup
+      S3_ACCESS_KEY_ID: test
+      S3_SECRET_ACCESS_KEY: test
+      ENCRYPTION_PASSWORD: ${ENCRYPTION_PASSWORD:-**None**}
+      SERVER_NAME: test
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    # create the bucket first; SeaweedFS takes a few seconds to accept requests
+    command:
+      - sh
+      - -c
+      - >-
+        for i in $$(seq 60); do
+        AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test
+        aws --endpoint-url http://s3:9000 --region us-east-1 s3 mb s3://pgbackup && break;
+        sleep 1; done && sh /scripts/run.sh
+    depends_on:
+      postgres:
+        condition: service_healthy
+      s3:
+        condition: service_started
+
+  verify:
+    image: pg-backup-s3:test
+    pull_policy: never
+    environment:
+      S3_ENDPOINT: http://s3:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: pgbackup
+      S3_PREFIX: backup
+      S3_ACCESS_KEY_ID: test
+      S3_SECRET_ACCESS_KEY: test
+      ENCRYPTION_PASSWORD: ${ENCRYPTION_PASSWORD:-**None**}
+    volumes:
+      - ./verify.sh:/test/verify.sh:ro
+    command:
+      - sh
+      - /test/verify.sh
+    depends_on:
+      backup:
+        condition: service_completed_successfully
