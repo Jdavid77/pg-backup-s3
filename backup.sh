@@ -64,7 +64,7 @@ POSTGRES_HOST_OPTS="-h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER $POSTG
 log "Creating dump of all databases from ${POSTGRES_HOST}..."
 pg_dumpall -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER | gzip > $SRC_FILE
 
-if [ -n "${ENCRYPTION_PASSWORD:-}" ]; then
+if [ -n "${ENCRYPTION_PASSWORD:-}" ] && [ "$ENCRYPTION_PASSWORD" != "**None**" ]; then
   log "Encrypting ${SRC_FILE}"
   openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -in $SRC_FILE -out ${SRC_FILE}.enc -pass pass:$ENCRYPTION_PASSWORD
   if [ $? != 0 ]; then
