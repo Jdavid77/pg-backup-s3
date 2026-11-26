@@ -1,19 +1,17 @@
-FROM alpine:3.24.3
+# The official image ships pg_dumpall for its own major version, so a new major
+# doesn't have to wait for Alpine to package its client.
+ARG POSTGRES_VERSION=17
+FROM postgres:${POSTGRES_VERSION}-alpine
 LABEL maintainer="Jdavid77 <johnynobrega17@gmail.com>"
 
 ARG UID=1001
 ARG GID=1001
 ARG USER=nonroot
-ARG POSTGRES_VERSION=17
-
-RUN echo "https://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories && \
-    echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
 
 RUN apk --no-cache add \
         curl \
         ca-certificates \
         openssl \
-        postgresql${POSTGRES_VERSION}-client \
         bash \
         aws-cli \
         coreutils
